@@ -1,0 +1,13 @@
+output/*.__i
+output/*.lst
+output/*.obj
+output/*.html
+output/*.iex
+output/*.htm
+output/*.lnp
+output/*.m51
+output/*.bin
+output/*.hex
+keil/Listings
+keil/Objects
+
