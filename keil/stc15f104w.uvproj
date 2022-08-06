@@ -243,7 +243,7 @@
               <Ocm1>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
+                <Size>0x1000</Size>
               </Ocm1>
               <Ocm2>
                 <Type>0</Type>
@@ -258,7 +258,7 @@
               <Ocr1>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
+                <Size>0x80</Size>
               </Ocr1>
               <Ocr2>
                 <Type>0</Type>
@@ -356,8 +356,8 @@
             <UserClasses></UserClasses>
             <CSection></CSection>
             <UserSection></UserSection>
-            <CodeBaseAddress></CodeBaseAddress>
-            <XDataBaseAddress></XDataBaseAddress>
+            <CodeBaseAddress>0X0000-0X0FFF</CodeBaseAddress>
+            <XDataBaseAddress>0X0000-0X007F</XDataBaseAddress>
             <PDataBaseAddress></PDataBaseAddress>
             <BitBaseAddress></BitBaseAddress>
             <DataBaseAddress></DataBaseAddress>
@@ -375,6 +375,59 @@
       <Groups>
         <Group>
           <GroupName>src</GroupName>
+          <GroupOption>
+            <CommonProperty>
+              <UseCPPCompiler>0</UseCPPCompiler>
+              <RVCTCodeConst>0</RVCTCodeConst>
+              <RVCTZI>0</RVCTZI>
+              <RVCTOtherData>0</RVCTOtherData>
+              <ModuleSelection>0</ModuleSelection>
+              <IncludeInBuild>2</IncludeInBuild>
+              <AlwaysBuild>2</AlwaysBuild>
+              <GenerateAssemblyFile>2</GenerateAssemblyFile>
+              <AssembleAssemblyFile>2</AssembleAssemblyFile>
+              <PublicsOnly>2</PublicsOnly>
+              <StopOnExitCode>11</StopOnExitCode>
+              <CustomArgument></CustomArgument>
+              <IncludeLibraryModules></IncludeLibraryModules>
+              <ComprImg>1</ComprImg>
+              <BankNo>65535</BankNo>
+            </CommonProperty>
+            <Group51>
+              <C51>
+                <RegisterColoring>2</RegisterColoring>
+                <VariablesInOrder>2</VariablesInOrder>
+                <IntegerPromotion>2</IntegerPromotion>
+                <uAregs>2</uAregs>
+                <UseInterruptVector>2</UseInterruptVector>
+                <Fuzzy>8</Fuzzy>
+                <Optimize>10</Optimize>
+                <WarningLevel>3</WarningLevel>
+                <SizeSpeed>2</SizeSpeed>
+                <ObjectExtend>2</ObjectExtend>
+                <ACallAJmp>2</ACallAJmp>
+                <InterruptVectorAddress>0</InterruptVectorAddress>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define></Define>
+                  <Undefine></Undefine>
+                  <IncludePath>..\inc</IncludePath>
+                </VariousControls>
+              </C51>
+              <Ax51>
+                <UseMpl>2</UseMpl>
+                <UseStandard>2</UseStandard>
+                <UseCase>2</UseCase>
+                <UseMod51>2</UseMod51>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define></Define>
+                  <Undefine></Undefine>
+                  <IncludePath></IncludePath>
+                </VariousControls>
+              </Ax51>
+            </Group51>
+          </GroupOption>
           <Files>
             <File>
               <FileName>STARTUP.A51</FileName>
@@ -386,6 +439,16 @@
               <FileType>1</FileType>
               <FilePath>..\src\main.c</FilePath>
             </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>one_os.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\one_os.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -395,6 +458,21 @@
               <FileName>STC15.H</FileName>
               <FileType>5</FileType>
               <FilePath>..\inc\STC15.H</FilePath>
+            </File>
+            <File>
+              <FileName>typedef.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\inc\typedef.h</FilePath>
+            </File>
+            <File>
+              <FileName>timer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\inc\timer.h</FilePath>
+            </File>
+            <File>
+              <FileName>one_os.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\inc\one_os.h</FilePath>
             </File>
           </Files>
         </Group>
