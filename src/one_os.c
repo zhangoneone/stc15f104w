@@ -2,15 +2,13 @@
 #include "typedef.h"
 #include "timer.h"
 #include "one_os.h"
-#include<string.h>
-#include<stdio.h>
-
+#include <rtx51tny.h>
 #define  TASK_MAX(task)   (sizeof(task)/sizeof(task[0]))
 #define  pwm		P32
 void task1()
 {
-	static u16 period = 100; //10hz
-	static u16 duty = 30;
+	static u16 period = 10; //100hz
+	static u16 duty = 7;
 	static u16 counter = 0;
 	
 	counter++;
