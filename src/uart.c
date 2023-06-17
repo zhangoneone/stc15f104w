@@ -16,7 +16,7 @@
 
 #define	BAUD_RATE			115200	//8.68us
 //#define	BAUD_RATE			9600	//104us
-#define	PERIOD					1000
+#define	PERIOD					50
 
 /* 因为是半双工，rx和tx都是通过cpu控制的，
 同一时间，cpu只能控制一个gpio的时序，

@@ -16,18 +16,24 @@ void pla_init()
 	EA = 1; // 打开总中断
 }
 
+void delay_test()
+{
+	while(1) {
+		P32 = 1;
+		delay_us(50);
+		P32 = 0;
+		delay_us(50);
+	}
+}
 void main()
 {
 	char c = 0;
 	pla_init();
+	//delay_test();
 	for(;;) {
 		//TaskProcess();
-		//scanf(str, "%s");
 		c = getchar();
-		//delay_ms(10);
 		putchar(c);
-		//delay_ms(100);
-		//delay_ms(100);
 	}
 	return;
 }
