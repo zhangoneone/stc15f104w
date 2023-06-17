@@ -40,11 +40,11 @@ typedef int8                     s8;
 typedef const int32              sc32;
 typedef const int16              sc16;
 typedef const int8               sc8;
-
+#if 0
 typedef uint32                   u32;
 typedef uint16                   u16;
 typedef uint8                    u8;
-
+#endif
 typedef const uint32             uc32;
 typedef const uint16             uc16;
 typedef const uint8              uc8;

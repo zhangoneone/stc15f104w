@@ -68,5 +68,5 @@ void TaskProcess(void)//放在你的while(1)循环里面
 			 task[i].TaskHook();  
     }
   }   
-	idle_mode();//进入低功耗模式		
+	//idle_mode();//进入低功耗模式		
 }

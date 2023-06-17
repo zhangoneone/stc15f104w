@@ -1,7 +1,8 @@
 #include "stc15.h"
 #include "typedef.h"
 #include "one_os.h"
-#define FSOC		35 //单片机频率35MHZ
+#include "config.h"
+#define FSOC		MAIN_Fosc/1000000 //单片机频率35MHZ
 //有T0和T2
 
 //传入溢出时间，传出要设置的初值
@@ -18,7 +19,7 @@ void timer0_init(u16 nus) // 定时器0初始化
 	
 	times = primary_value(nus);
 	AUXR |= 0x80; //工作在1T模式 
-	TMOD &= 0xF0; // 设置定时器0为工作模式0 16位定时器模式，工作模式工作在0
+	TMOD &= 0xF0; // 设置定时器0为 16位定时器模式,模式0
 	TH0 = times >> 8;
 	TL0 = (times & 0xFF);
 	
@@ -44,14 +45,16 @@ void timer2_init(u16 nus) // 定时器0初始化
 }
 
 
+
 //定时器0
 void tm0_isr() interrupt 1
 {
-
+	//systick
+	//TaskRemarks();
 }
 
 void tm2_isr() interrupt 12           //中断入口
 {
 	//systick
-	TaskRemarks();
+	//TaskRemarks();
 }
