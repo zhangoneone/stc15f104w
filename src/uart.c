@@ -9,14 +9,14 @@
 #define PARITY_BIT		0
 
 #define rx_bit_r()				P30
-#define tx_bit_w(bits)		(P31 = bits)//(P32 = bits)
+#define tx_bit_w(bits)		(P32 = bits)//(P31 = bits)
 
 #define delay_us(us)		delay_us(us)
 #define delay_ms(ms)		delay_ms(ms)
 
 #define	BAUD_RATE			115200	//8.68us
 //#define	BAUD_RATE			9600	//104us
-#define	PERIOD					2
+#define	PERIOD					8
 
 /* 因为是半双工，rx和tx都是通过cpu控制的，
 同一时间，cpu只能控制一个gpio的时序，
@@ -33,26 +33,20 @@ static void uart_putc(unsigned char uContent)
 	//起始信号
 	tx_bit_w(0);
 	delay_us(PERIOD);
-	_nop_();
-	_nop_();
-	_nop_();
-	_nop_();
-	_nop_();
-	_nop_();
-	_nop_();
-	_nop_();
+	NOP(25);
 	//LSB优先
 	for (i = 0; i < DATA_WIDTH; i++)
 	{
 		tx_bit_w(uContent & 0x01);
 		uContent >>= 1;
-		delay_us(PERIOD);  
+		delay_us(PERIOD);
+		NOP(25);
 	}
 	if (STOP_BIT) {
 		//结束信号
 		tx_bit_w(1);
 		delay_us(PERIOD * STOP_BIT);
-		_nop_();
+		NOP(25);
 	}
 	EA = 1;
 }
@@ -62,14 +56,20 @@ static unsigned char uart_getc()
 	unsigned char i; 
   unsigned char uContent = 0x00;
 
-	delay_us(PERIOD >> 1); //在比特信号的中间采样
+	//delay_us(PERIOD >> 1); //在比特信号的中间采样
+	NOP(5);
 	if(!rx_bit_r()) {
-		//数据接收     
+		//数据接收 
+		NOP(30);	//延时1us
 		for(i = 0; i < DATA_WIDTH; i++) {
 			uContent >>= 1;
-			delay_us(PERIOD);
+			NOP(35);	//延时1us
+			NOP(8);	//延时0.2us
+			//delay_us(PERIOD);
 			if(rx_bit_r())
 				uContent |= 0x80;
+			else
+				uContent |= 0x00;
 		}
 		//停止位
 		/* 因为这里是软件模拟的，当一帧数据接收完毕，必须立刻开中断，侦听到下一帧的起始信号
@@ -80,14 +80,14 @@ static unsigned char uart_getc()
 			 并不是起始信号，而是结束信号，因此，如果想要正确触发接收中断，至少要延时到结束信号的上升沿
 				已经过去。
 		*/
-		if (STOP_BIT)
-			delay_us(PERIOD * STOP_BIT);
+		//if (STOP_BIT)
+		//	delay_us(PERIOD * STOP_BIT);
 	}
 	
-	if(rx_bit_r())
+	//if(rx_bit_r())
 		return uContent;
 	
-	return 0;
+	//return 0;
 }
 
 
@@ -114,40 +114,43 @@ void ext_init() // 定时器0初始化
 }
 
 static volatile uart_fifo_t uart_fifo;
-//从硬件获取rx数据
-void exint4() interrupt INT4_VECTOR          //INT4中断入口
+
+void uart_automic_read(void)
 {
 	uint8 d;
-	uint8 i;
-
-	//若需要手动清除中断标志,可先关闭中断,此时系统会自动清除内部的中断标志
-	INT_CLKO &= 0xBF;
-	//上升沿触发的，是结束信号，清中断后，直接返回。
-	if(rx_bit_r()) {
-			INT_CLKO |= 0x40;               //然后再开中断即可
-			return;
-	}
 	
 	//提示rx正在进行
 	rx_done = 0;
 	
 	d = uart_getc();
-	i = uart_fifo.rct;
-	if (i < COM_RX1_Lenth) {	/* Store it into the rx fifo if not full */
-			uart_fifo.rct = ++i;
-			i = uart_fifo.rwi;
-			uart_fifo.rbuf[i] = d;
-			uart_fifo.rwi = ++i % COM_RX1_Lenth;
+	if (uart_fifo.rct < COM_RX1_Lenth) {	/* Store it into the rx fifo if not full */
+			uart_fifo.rct++;
+			uart_fifo.rbuf[uart_fifo.rwi] = d;
+			uart_fifo.rwi = ++uart_fifo.rwi % COM_RX1_Lenth;
 	}
 	
 	//提示rx已结束
 	rx_done = 1;	
+}
+//从硬件获取rx数据
+void exint4() interrupt INT4_VECTOR          //INT4中断入口
+{
+	//若需要手动清除中断标志,可先关闭中断,此时系统会自动清除内部的中断标志
+	INT_CLKO &= 0xBF;
+	//上升沿触发的，是结束信号，清中断后，直接返回。
+//	if(rx_bit_r()) {
+//			INT_CLKO |= 0x40;               //然后再开中断即可
+//			return;
+//	}
+	uart_automic_read();
+	
 	INT_CLKO |= 0x40;               //然后再开中断即可
 }
 
 void uart_init()
 {
 	ext_init();
+//	uart_automic_read();
 }
 
 //重定向putchar和_getkey，以使用stdio中的所有库函数

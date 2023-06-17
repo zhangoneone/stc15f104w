@@ -30,5 +30,7 @@ void uart_init();
 char putchar(char c);
 char _getkey(void);
 char getchar(void);
+
+void uart_automic_read(void);
 #endif
 

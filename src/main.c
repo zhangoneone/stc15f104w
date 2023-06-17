@@ -19,17 +19,18 @@ void pla_init()
 void delay_test()
 {
 	while(1) {
+			P32 = 0;
+		delay_us(100);
 		P32 = 1;
-		delay_us(50);
-		P32 = 0;
-		delay_us(50);
+		delay_us(100);
+	//	uart_automic_read();
 	}
 }
 void main()
 {
 	char c = 0;
 	pla_init();
-	//delay_test();
+	delay_test();
 	for(;;) {
 		//TaskProcess();
 		//c = getchar();
