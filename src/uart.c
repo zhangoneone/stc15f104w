@@ -16,7 +16,7 @@
 
 #define	BAUD_RATE			115200	//8.68us
 //#define	BAUD_RATE			9600	//104us
-#define	PERIOD					50
+#define	PERIOD					2
 
 /* 因为是半双工，rx和tx都是通过cpu控制的，
 同一时间，cpu只能控制一个gpio的时序，
@@ -33,6 +33,14 @@ static void uart_putc(unsigned char uContent)
 	//起始信号
 	tx_bit_w(0);
 	delay_us(PERIOD);
+	_nop_();
+	_nop_();
+	_nop_();
+	_nop_();
+	_nop_();
+	_nop_();
+	_nop_();
+	_nop_();
 	//LSB优先
 	for (i = 0; i < DATA_WIDTH; i++)
 	{
@@ -44,6 +52,7 @@ static void uart_putc(unsigned char uContent)
 		//结束信号
 		tx_bit_w(1);
 		delay_us(PERIOD * STOP_BIT);
+		_nop_();
 	}
 	EA = 1;
 }
