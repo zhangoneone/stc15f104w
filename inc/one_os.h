@@ -1,4 +1,6 @@
 //=========================================简易任务调度器==============================================
+#ifndef __ONE_OS_H
+#define __ONE_OS_H
 
 typedef struct Tasks
 {
@@ -8,11 +10,14 @@ typedef struct Tasks
   unsigned int ItvTime; // 数值上等于Timer
   void (*TaskHook)(void); //任务函数
 }Tasks;  
-void TaskHangup(unsigned char Task_Num);
-void TaskRecovery(unsigned char Task_Num);
+
+extern volatile unsigned long os_sec;
+extern volatile unsigned short  os_msec;
 void TaskProcess(void);
 void TaskRemarks(void);
 
 #define idle_mode()		(PCON |= 0x01)
 
 #define power_down()	(PCON |= 0x02)
+
+#endif

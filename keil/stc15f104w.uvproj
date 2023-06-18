@@ -464,6 +464,16 @@
               <FileType>1</FileType>
               <FilePath>..\src\delay.c</FilePath>
             </File>
+            <File>
+              <FileName>pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>com.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\com.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -508,6 +518,11 @@
               <FileName>uart.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\inc\uart.h</FilePath>
+            </File>
+            <File>
+              <FileName>com.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\inc\com.h</FilePath>
             </File>
           </Files>
         </Group>

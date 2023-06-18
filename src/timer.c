@@ -24,12 +24,12 @@ void timer0_init(u16 nus) // 定时器0初始化
 	TL0 = (times & 0xFF);
 	
 	TR0 = 1; // 打开定时器 0
+	PT0 = 0; // 低优先级
 	ET0 = 1; // 打开定时器 0 中断
-
 }
-
+#if 0
 //定时器2 nus触发一次
-void timer2_init(u16 nus) // 定时器0初始化
+void timer2_init(u16 nus) // 定时器2初始化
 {
 	u16 times;
 	
@@ -43,18 +43,12 @@ void timer2_init(u16 nus) // 定时器0初始化
 	AUXR |= 0x10;                   //定时器2开始计时 
   IE2 |= 0x04;                    //开定时器2中断
 }
-
+#endif
 
 
 //定时器0
 void tm0_isr() interrupt 1
 {
 	//systick
-	//TaskRemarks();
-}
-
-void tm2_isr() interrupt 12           //中断入口
-{
-	//systick
-	//TaskRemarks();
+	TaskRemarks();
 }

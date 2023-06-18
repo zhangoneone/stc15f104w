@@ -12,12 +12,12 @@
 /*------------------------------------------------------------------*/
 
 
-#ifndef __USART_H
-#define __USART_H	 
+#ifndef __UART_H
+#define __UART_H	 
 
 #include	"config.h"
 #include "typedef.h"
-#define	COM_TX1_Lenth	8
+
 #define	COM_RX1_Lenth	8
 
 
@@ -30,7 +30,9 @@ void uart_init();
 char putchar(char c);
 char _getkey(void);
 char getchar(void);
+int puts(const char *s);
+char *gets(char *s, int n);
+uint8 uart_fifo_count(void);
 
-void uart_automic_read(void);
 #endif
 

@@ -46,19 +46,6 @@ void delay_ms(unsigned int ms)
   } while(--ms);
 }
 
-//void delay_us(unsigned int us)
-//{
-//	unsigned char i;
-//	us >>= 1;
-//	while(us--) {
-//		_nop_();
-//		_nop_();
-//		_nop_();
-//		i = 5;
-//		while (--i);
-//	}
-//}
-
 void delay_us(unsigned int us)
 {
 	for(;;) {

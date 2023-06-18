@@ -1,7 +1,7 @@
 #include "uart.h"
 #include "timer.h"
 #include "delay.h"
-#include<stdio.h>
+//#include<stdio.h>
 #include<string.h>
 
 #define DATA_WIDTH		8
@@ -9,20 +9,21 @@
 #define PARITY_BIT		0
 
 #define rx_bit_r()				P30
+#define rx_bit_w(bits)		(P30 = bits)
 #define tx_bit_w(bits)		(P31 = bits)//(P32 = bits)
 
 #define delay_us(us)		delay_us(us)
 #define delay_ms(ms)		delay_ms(ms)
 
-#define	BAUD_RATE			115200	//8.68us
+//#define	BAUD_RATE			115200	//8.68us
 //#define	BAUD_RATE			9600	//104us
-#define	PERIOD					8
+#define	BAUD_RATE			460800	//2.17us
+//#define	PERIOD					8
 
 /* 因为是半双工，rx和tx都是通过cpu控制的，
 同一时间，cpu只能控制一个gpio的时序，
 因此rx时不可tx，tx时也不可rx(但是我们无法控制外部设备的rx时间)
 */
-static uint8 rx_done = 1;
 
 static void uart_putc(unsigned char uContent)
 {
@@ -34,7 +35,7 @@ static void uart_putc(unsigned char uContent)
 	tx_bit_w(0);	// 1
 	NOP(12);
 	//LSB优先
-	for (; i < DATA_WIDTH; i++) //5, 7
+	for (;i < DATA_WIDTH; i++) //5, 7
 	{
 		NOP(40);
 		NOP(13);
@@ -61,7 +62,7 @@ static unsigned char uart_getc()
 	if(!rx_bit_r()) { //2
 		NOP(5); 
 		//数据接收 
-		for(; i < DATA_WIDTH; i++) { // 5 7
+		for(;i < DATA_WIDTH; i++) { // 5 7
 			uContent >>= 1; //4
 			NOP(40);
 			NOP(4);
@@ -83,33 +84,17 @@ static unsigned char uart_getc()
 		//	delay_us(PERIOD * STOP_BIT);
 		
 	}
-	
-	//if(rx_bit_r())
-		return uContent;
-	
-	//return 0;
+
+	return uContent;
+
 }//2
 
 
-void ext_init() // 定时器0初始化
+void ext_init() // 外部中断4初始化
 {
-	  P0M0 = 0x00;
-    P0M1 = 0x00;
-    P1M0 = 0x00;
-    P1M1 = 0x00;
-    P2M0 = 0x00;
-    P2M1 = 0x00;
     P3M0 = 0x00;
     P3M1 = 0x00;
-    P4M0 = 0x00;
-    P4M1 = 0x00;
-    P5M0 = 0x00;
-    P5M1 = 0x00;
-    P6M0 = 0x00;
-    P6M1 = 0x00;
-    P7M0 = 0x00;
-    P7M1 = 0x00;
-	
+		IP2 |= PSH; 										//PX4高优先级
 		INT_CLKO |= 0x40;               //(EX4 = 1)使能INT4中断
 }
 
@@ -120,7 +105,7 @@ void uart_automic_read(void)
 	uint8 d;
 	
 	//提示rx正在进行
-	rx_done = 0; //2
+	uart_rx_done = 0; //2
 	
 	d = uart_getc();
 	//以下约33机器周期
@@ -131,7 +116,7 @@ void uart_automic_read(void)
 	}
 	
 	//提示rx已结束
-	rx_done = 1;	
+	uart_rx_done = 1;	
 }
 //从硬件获取rx数据
 void exint4() interrupt INT4_VECTOR          //INT4中断入口
@@ -152,8 +137,9 @@ void exint4() interrupt INT4_VECTOR          //INT4中断入口
 
 void uart_init()
 {
+	rx_bit_w(1);
 	ext_init();
-//	uart_automic_read();
+	uart_rx_done = 1;
 }
 
 //重定向putchar和_getkey，以使用stdio中的所有库函数
@@ -164,11 +150,13 @@ char putchar(char c)
 	  这一波数据已经传输完成了。因此可以设置rx_done标志位。
 	*/
 	while (1) {
-		delay_us(PERIOD * STOP_BIT * 2); //等待2倍的停止位
-		if(rx_done) //确定rx已经空闲
+		NOP(40);
+		NOP(40);
+		NOP(40);
+		NOP(16);//等待2倍的停止位
+		if(uart_rx_done) //确定rx已经空闲
 			break;
 	}
-
 	uart_putc(c);
 	
 	return c;
@@ -192,7 +180,35 @@ char _getkey(void)
 	return d;
 }
 
+uint8 uart_fifo_count(void)
+{
+	return uart_fifo.rct;
+}
+
 char getchar(void)
 {
 	return _getkey();
 }
+
+int puts(const char *s)
+{
+	unsigned char i = 0;
+	
+	while(*s) {
+		putchar(*s++);
+		i++;
+	}
+	
+	return i;
+}
+
+char *gets(char *s, int n)
+{
+	while(--n >= 0)
+		*s++ = getchar();
+	
+	return s;
+	
+}
+
+

@@ -28,6 +28,8 @@
 /*********************************************************/
 
 #include	"STC15.H"
-
+#include "delay.h"
+extern volatile unsigned char bdata g_event;
+extern bit uart_rx_done;
 
 #endif
