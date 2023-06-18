@@ -41,35 +41,35 @@ static void uart_putc(unsigned char uContent)
 		tx_bit_w(uContent & 0x01);//4
 		uContent >>= 1;	//4
 	}//3
+	//最后一个bit采样保持时间
+	NOP(40);
+	NOP(15);
 	if (STOP_BIT) {
 		//结束信号
 		tx_bit_w(1); //1
 		NOP(40);
-		NOP(18);
+		NOP(25);
 	}
 	EA = 1; //1
 }
 
 static unsigned char uart_getc()
 {
-	unsigned char i; 
-  unsigned char uContent = 0x00;
+	unsigned char i = 0; 
+  unsigned char uContent = 0x00; //2
 
-	//delay_us(PERIOD >> 1); //在比特信号的中间采样
-	NOP(5);
-	if(!rx_bit_r()) {
+	if(!rx_bit_r()) { //2
+		NOP(5); 
 		//数据接收 
-		NOP(30);	//延时1us
-		for(i = 0; i < DATA_WIDTH; i++) {
-			uContent >>= 1;
-			NOP(35);	//延时1us
-			NOP(8);	//延时0.2us
-			//delay_us(PERIOD);
-			if(rx_bit_r())
-				uContent |= 0x80;
+		for(; i < DATA_WIDTH; i++) { // 5 7
+			uContent >>= 1; //4
+			NOP(40);
+			NOP(4);
+			if(rx_bit_r()) //4?
+				uContent |= 0x80; //4
 			else
-				uContent |= 0x00;
-		}
+				uContent |= 0x00;//4
+		}//3
 		//停止位
 		/* 因为这里是软件模拟的，当一帧数据接收完毕，必须立刻开中断，侦听到下一帧的起始信号
 			 考虑到当前数据帧接收完毕后，还会有一些代码运行，因此，在中断接收的状态下，
@@ -81,13 +81,14 @@ static unsigned char uart_getc()
 		*/
 		//if (STOP_BIT)
 		//	delay_us(PERIOD * STOP_BIT);
+		
 	}
 	
 	//if(rx_bit_r())
 		return uContent;
 	
 	//return 0;
-}
+}//2
 
 
 void ext_init() // 定时器0初始化
@@ -119,9 +120,10 @@ void uart_automic_read(void)
 	uint8 d;
 	
 	//提示rx正在进行
-	rx_done = 0;
+	rx_done = 0; //2
 	
 	d = uart_getc();
+	//以下约33机器周期
 	if (uart_fifo.rct < COM_RX1_Lenth) {	/* Store it into the rx fifo if not full */
 			uart_fifo.rct++;
 			uart_fifo.rbuf[uart_fifo.rwi] = d;
@@ -133,17 +135,19 @@ void uart_automic_read(void)
 }
 //从硬件获取rx数据
 void exint4() interrupt INT4_VECTOR          //INT4中断入口
-{
+{//中断响应机器周期是3~8,取5
 	//若需要手动清除中断标志,可先关闭中断,此时系统会自动清除内部的中断标志
-	INT_CLKO &= 0xBF;
+	EA = 0;
+	INT_CLKO &= 0xBF; //1
 	//上升沿触发的，是结束信号，清中断后，直接返回。
 //	if(rx_bit_r()) {
 //			INT_CLKO |= 0x40;               //然后再开中断即可
 //			return;
 //	}
-	uart_automic_read();
+	uart_automic_read(); //2
 	
-	INT_CLKO |= 0x40;               //然后再开中断即可
+	INT_CLKO |= 0x40;    //1           //然后再开中断即可
+	EA = 1;
 }
 
 void uart_init()

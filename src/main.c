@@ -33,8 +33,9 @@ void main()
 	//delay_test();
 	for(;;) {
 		//TaskProcess();
-		//c = getchar();
-		putchar(0xaa);
+		c = getchar();
+		delay_ms(5);
+		putchar(c);
 	}
 	return;
 }
