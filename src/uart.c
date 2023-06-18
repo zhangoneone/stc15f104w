@@ -9,7 +9,7 @@
 #define PARITY_BIT		0
 
 #define rx_bit_r()				P30
-#define tx_bit_w(bits)		(P32 = bits)//(P31 = bits)
+#define tx_bit_w(bits)		(P31 = bits)//(P32 = bits)
 
 #define delay_us(us)		delay_us(us)
 #define delay_ms(ms)		delay_ms(ms)
@@ -26,29 +26,28 @@ static uint8 rx_done = 1;
 
 static void uart_putc(unsigned char uContent)
 {
-	unsigned char i;
+	unsigned char i = 0;
 	
 	//完整的数据帧不可被中断
-	EA = 0;
+	EA = 0;//1
 	//起始信号
-	tx_bit_w(0);
-	delay_us(PERIOD);
-	NOP(25);
+	tx_bit_w(0);	// 1
+	NOP(12);
 	//LSB优先
-	for (i = 0; i < DATA_WIDTH; i++)
+	for (; i < DATA_WIDTH; i++) //5, 7
 	{
-		tx_bit_w(uContent & 0x01);
-		uContent >>= 1;
-		delay_us(PERIOD);
-		NOP(25);
-	}
+		NOP(40);
+		NOP(13);
+		tx_bit_w(uContent & 0x01);//4
+		uContent >>= 1;	//4
+	}//3
 	if (STOP_BIT) {
 		//结束信号
-		tx_bit_w(1);
-		delay_us(PERIOD * STOP_BIT);
-		NOP(25);
+		tx_bit_w(1); //1
+		NOP(40);
+		NOP(18);
 	}
-	EA = 1;
+	EA = 1; //1
 }
 
 static unsigned char uart_getc()

@@ -61,9 +61,10 @@ void delay_ms(unsigned int ms)
 
 void delay_us(unsigned int us)
 {
-	while(us--) {
-		NOP(35);
+	for(;;) {
+		NOP(22);
+		if (--us == 0)
+			return;
 	}
 }
-
 
