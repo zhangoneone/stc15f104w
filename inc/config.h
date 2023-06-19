@@ -31,5 +31,6 @@
 #include "delay.h"
 extern volatile unsigned char bdata g_event;
 extern bit uart_rx_done;
+extern bit uart_tx_done;
 
 #endif

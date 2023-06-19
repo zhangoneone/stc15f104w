@@ -23,6 +23,15 @@
 #include "stc15.h"
 
 
+void delay_us(unsigned int us)
+{
+	for(;;) {
+		NOP(22);
+		if (--us == 0)
+			return;
+	}
+}
+
 //========================================================================
 // º¯Êý: void  delay_ms(unsigned char ms)
 // ÃèÊö: ÑÓÊ±º¯Êý¡£
@@ -34,24 +43,7 @@
 //========================================================================
 void delay_ms(unsigned int ms)
 {
-	unsigned char i, j;
 	do {
-		_nop_();
-		_nop_();
-		i = 33;
-		j = 66;
-		do {
-			while (--j);
-		} while (--i);
+		delay_us(1000);
   } while(--ms);
 }
-
-void delay_us(unsigned int us)
-{
-	for(;;) {
-		NOP(22);
-		if (--us == 0)
-			return;
-	}
-}
-

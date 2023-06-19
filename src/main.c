@@ -11,6 +11,7 @@
 
 volatile unsigned char bdata g_event = 0;
 sbit uart_rx_done = g_event^7;
+sbit uart_tx_done = g_event^6;
 
 void pla_init()
 {
@@ -27,9 +28,9 @@ void main()
 	
 	for(;;) {
 		//TaskProcess();
-		c = getchar();
-		putchar(c);
-		delay_ms(5);
+		//c = getchar();
+		putchar(0xaa);
+		//delay_ms(100);
 	}
 	
 	return;

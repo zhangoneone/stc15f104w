@@ -19,11 +19,13 @@
 #include "typedef.h"
 
 #define	COM_RX1_Lenth	8
-
+#define	COM_TX1_Lenth	8
 
 typedef struct uart_fifo_t{
-	uint16 rri, rwi, rct;
-	uint8	 rbuf[COM_RX1_Lenth];
+	uint8	tri, twi, tct;
+	uint8 rri, rwi, rct;
+	uint8	tbuf[COM_TX1_Lenth];
+	uint8	rbuf[COM_RX1_Lenth];
 } uart_fifo_t;
 
 void uart_init();
