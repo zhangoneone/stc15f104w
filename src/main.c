@@ -28,9 +28,14 @@ void main()
 	
 	for(;;) {
 		//TaskProcess();
-		//c = getchar();
-		putchar(0xaa);
-		//delay_ms(100);
+		c = getchar();
+		if (c == 0x12)
+			c =0x00;
+		delay_ms(200);
+		putchar(c);
+		delay_ms(40);
+		//putchar(c+0x1);
+		delay_ms(40);
 	}
 	
 	return;
