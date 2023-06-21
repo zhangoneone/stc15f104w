@@ -26,10 +26,10 @@ void main()
 	pla_init();
 	
 	for(;;) {
-		//TaskProcess();
-		c = getchar();
-		putchar(c);
-		delay_ms(5);
+		TaskProcess();
+		//c = getchar();
+		//putchar(c);
+		//delay_ms(5);
 	}
 	
 	return;

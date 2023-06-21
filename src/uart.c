@@ -94,7 +94,7 @@ void ext_init() // 外部中断4初始化
 {
     P3M0 = 0x00;
     P3M1 = 0x00;
-		IP2 |= PSH; 										//PX4高优先级
+		//IP2 |= PSH; 										//PX4高优先级
 		INT_CLKO |= 0x40;               //(EX4 = 1)使能INT4中断
 }
 

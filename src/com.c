@@ -44,7 +44,10 @@ static u8 checksum(const u8 *var)
 	
 	return (sum % (0xFFU));
 }
+/*
+00 00 01 02 03 04 05 0f
 
+*/
 static u8 com_parse(u8 *var)
 {
 	u8 ops, dsize, sum;
@@ -52,35 +55,33 @@ static u8 com_parse(u8 *var)
 	ops = OPS(var[CMD]);
 	dsize = DSIZE(var[CMD]);
 	sum = checksum(var);
-	printf("%c%c%c%c%c%c%c%c", 
-							var[0], var[1], var[2], var[3],
-							var[4], var[5], var[6], var[7]);
+
 	if(sum != var[CHECKSUM]) {
-		//printf("数据包错误\r\n");
+		printf("数据包错误\r\n");
 		return 0;
 	}
 	
 	switch(ops) {
 		case CMD_LOOP_BACK:
-//			printf("%c%c%c%c%c%c%c%c", 
-//							var[0], var[1], var[2], var[3],
-//							var[4], var[5], var[6], var[7]);
+			printf("%c%c%c%c%c%c%c%c", 
+							var[0], var[1], var[2], var[3],
+							var[4], var[5], var[6], var[7]);
 		break;
 		
 		case CMD_OS_TIME:
-
+			printf("系统时间:%ld.%u\r\n", os_sec, os_msec);
 		break;
 		
 		case CMD_PWM_DUTY:
-
+			printf("pwm占空比是:7:3\r\n");
 		break;
 		
 		case CMD_PWM_FRE:
-
+			printf("pwm频率是:100Hz\r\n");
 		break;
 		
 		default:
-			//printf("命令错误\r\n");
+			printf("命令错误\r\n");
 		break;
 	}
 	
@@ -102,6 +103,4 @@ void com_task()
 		//收集满一次完整数据，处理
 		com_parse(com);
 	}
-
-	//printf("系统时间:%ld.%u\r\n", os_sec, os_msec);
 }
