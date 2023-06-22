@@ -34,5 +34,6 @@ int puts(const char *s);
 char *gets(char *s, int n);
 uint8 uart_fifo_count(void);
 
+#define IRQ_UART		0
 #endif
 
