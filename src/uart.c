@@ -5,7 +5,7 @@
 #include<string.h>
 
 #define DATA_WIDTH		8
-#define	STOP_BIT			1
+#define	STOP_BIT			2
 #define PARITY_BIT		0
 
 #define rx_bit_r()				P30
@@ -53,9 +53,9 @@ static void timer_unset(void)
 static void uart_try_tx(void)
 {
 	if(uart_ctrl.rx_done) {
-		delay_ms(20); //目前1000波特率，写死延时2ms
+		delay_ms(5); //目前1000波特率，写死延时3ms
 	} else {
-		return;
+		return; //正在rx, 取消此次tx, 因为tx满了也会轮询发送的。
 	}
 	if(uart_ctrl.rx_done) {
 		//确定rx已经空闲
@@ -72,7 +72,7 @@ static void uart_putc(unsigned char c)
 
 	/* Wait for tx fifo is not full */
 	while (uart_fifo.tct >= COM_TX1_Lenth) {
-			uart_try_tx();
+			uart_try_tx(); //当缓冲区满了，提醒tx去发数据
 	}
 
 	i = uart_fifo.twi;		/* Put a byte into Tx fifo */
@@ -82,7 +82,7 @@ static void uart_putc(unsigned char c)
 	uart_fifo.tct++;
 	EA = 1;
 	
-	uart_try_tx();
+	uart_try_tx(); //有数据就直接flush
 
 	return;
 }
@@ -167,10 +167,6 @@ char *gets(char *s, int n)
 	
 }
 
-
-
-
-
 //========================================================================
 // 函数: void   timer2_int (void) interrupt 12
 // 描述: Timer2中断处理程序.
@@ -213,16 +209,21 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 				uart_ctrl.rx_work_bits >>= 1;
 				if(rx_bit_r())
 					uart_ctrl.rx_work_bits |= 0x80;
+				//接收完成，下次直接进入停止位状态
+				if (!uart_ctrl.rx_bits)
+					uart_ctrl.rx_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
 			} else
-				uart_ctrl.rx_sm = SM_DATA_BITS;
+					uart_ctrl.rx_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
 		}
 		//收停止位
 		else if (uart_ctrl.rx_sm == SM_DATA_BITS) {
 			if (uart_ctrl.stop_bits) {
 				uart_ctrl.stop_bits--;
-			} else {
-				uart_ctrl.rx_sm = SM_STOP_BITS;
-			}
+				// 停止完成，下次直接进入协议结束
+				if (!uart_ctrl.stop_bits)
+					uart_ctrl.rx_sm = SM_STOP_BITS;
+			} else
+					uart_ctrl.rx_sm = SM_STOP_BITS;
 		}
 		//协议结束
 		else if (uart_ctrl.rx_sm == SM_STOP_BITS) {
@@ -282,8 +283,9 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 					tx_bit_w(0);
 				
 				uart_ctrl.tx_work_bits >>= 1;
-			} else {
-				uart_ctrl.tx_sm = SM_DATA_BITS;
+				// 发送完成,下次直接进入停止位状态
+				if (!uart_ctrl.tx_bits)
+					uart_ctrl.tx_sm = SM_DATA_BITS;
 			}	
 		}
 		//发停止位
@@ -291,8 +293,9 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 			if (uart_ctrl.stop_bits) {
 				tx_bit_w(1);
 				uart_ctrl.stop_bits--;
-			} else {
-				uart_ctrl.tx_sm = SM_STOP_BITS;
+				// 停止完成,下次直接进入结束状态
+				if (!uart_ctrl.stop_bits)
+					uart_ctrl.tx_sm = SM_STOP_BITS;
 			}
 		}
 		//协议结束
@@ -332,11 +335,10 @@ void Ext_INT4 (void) interrupt INT4_VECTOR
 		//rx时序控制
 		uart_ctrl.rx_done = 0;
 		uart_ctrl.rx_sm = SM_BUS_IDLE;
-    T2H = (65536 - UART3_BitTime / 4) / 256;  //半个数据位
-    T2L = (65536 - UART3_BitTime / 4) % 256;  //半个数据位
+    T2H = (65536 - UART3_BitTime / 4) / 256;  //小半个数据位
+    T2L = (65536 - UART3_BitTime / 4) % 256;  //小半个数据位
     AUXR |=  (1<<4);    //Timer2 开始运行
 	}
-
 }
 
 

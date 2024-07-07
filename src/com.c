@@ -5,7 +5,7 @@
 #include "one_os.h"
 #include "config.h"
 #include "delay.h"
-#include <stdio.h>
+//#include <stdio.h>
 #include "uart.h"
 
 /*
@@ -52,12 +52,12 @@ static u8 com_parse(u8 *var)
 	ops = OPS(var[CMD]);
 	dsize = DSIZE(var[CMD]);
 	sum = checksum(var);
-	printf("%c%c%c%c%c%c%c%c", 
-							var[0], var[1], var[2], var[3],
-							var[4], var[5], var[6], var[7]);
+	//printf("%c%c%c%c%c%c%c%c", 
+	//						var[0], var[1], var[2], var[3],
+	//						var[4], var[5], var[6], var[7]);
 	if(sum != var[CHECKSUM]) {
 		//printf("Êı¾İ°ü´íÎó\r\n");
-		return 0;
+		//return 0;
 	}
 	
 	switch(ops) {
@@ -80,7 +80,7 @@ static u8 com_parse(u8 *var)
 		break;
 		
 		default:
-			//printf("ÃüÁî´íÎó\r\n");
+			puts("ÃüÁî´íÎó\r\n");
 		break;
 	}
 	

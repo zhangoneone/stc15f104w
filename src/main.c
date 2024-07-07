@@ -16,26 +16,17 @@ sbit uart_tx_done = g_event^6;
 void pla_init()
 {
 	P3 = 0;
-	timer0_init(1000);
+	timer0_init(1000); //1ms执行1次
 	uart_init();
 	EA = 1; // 打开总中断
 }
 
 void main()
 {
-	char c = 0;
 	pla_init();
 	
 	for(;;) {
-		//TaskProcess();
-		c = getchar();
-		if (c == 0x12)
-			c =0x00;
-		delay_ms(200);
-		putchar(c);
-		delay_ms(40);
-		//putchar(c+0x1);
-		delay_ms(40);
+		TaskProcess();
 	}
 	
 	return;

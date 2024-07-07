@@ -5,26 +5,26 @@
 #include <rtx51tny.h>
 #include <stdio.h>
 #define  TASK_MAX(task)   (sizeof(task)/sizeof(task[0]))
-volatile unsigned long os_sec = 0;
-volatile unsigned short  os_msec = 0;
+//volatile unsigned long os_sec = 0;
+//volatile unsigned short  os_msec = 0;
 
 extern void pwm_task();
 extern void com_task();
 static Tasks task[]=   
 {   
-	{0,1,1,1,pwm_task},
-	{1,1,50,50,com_task},
+	{0,1,10,10,pwm_task}, //10 systick执行一次,100HZ
+	{1,1,100,100,com_task},
 };
 
 void TaskRemarks(void) //放在定时器中断里面
 {
 	unsigned char i;
 	
-	os_msec++;
-	if(os_msec == 999) {
-		os_msec = 0;
-		os_sec++;
-	}
+//	os_msec++;
+//	if(os_msec == 999) {
+//		os_msec = 0;
+//		os_sec++;
+//	}
 	
 	for (i=0; i<TASK_MAX(task); i++)          
 	{
