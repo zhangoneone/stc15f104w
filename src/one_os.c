@@ -12,8 +12,8 @@ extern void pwm_task();
 extern void com_task();
 static Tasks task[]=   
 {   
-	{0,1,10,10,pwm_task}, //10 systick执行一次,100HZ
-	{1,1,100,100,com_task},
+	{1,10,10,pwm_task}, //10 systick执行一次,100HZ
+	{1,100,100,com_task},
 };
 
 void TaskRemarks(void) //放在定时器中断里面

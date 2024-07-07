@@ -10,8 +10,8 @@
 
 #define rx_bit_r()				P30
 #define rx_bit_w(bits)		(P30 = bits)
-#define tx_bit_w(bits)		(P31 = bits)//(P32 = bits)
-//#define	TX_TRIGGER()			{rx_bit_w(1);rx_bit_w(0);} //产生下降沿
+#define tx_bit_w(bits)		(P31 = bits)
+
 #define	TX_TRIGGER()			{P30 = 0;} //在rx产生下降沿,进入中断
 #define	TX_TRIGGER_RESET(){P30 = 1;} //恢复rx的空闲状态
 #define UART3_Baudrate  1000UL    //定义波特率
@@ -19,8 +19,6 @@
 #define UART3_BitTime   		(MAIN_Fosc / UART3_Baudrate)
 #define	EX_INT_ENABLE()			(INT_CLKO |= 0x40)
 #define	EX_INT_DISABLE()		(INT_CLKO &= 0xBF)
-#define	TIMER_START()
-#define	TIMER_STOP()
 
 #define	SM_BUS_IDLE					(0x01U << 0)
 #define	SM_START_BIT				(0x01U << 1)
@@ -28,10 +26,10 @@
 #define	SM_STOP_BITS				(0x01U << 3)
 
 typedef struct soft_uart_ctrl_t {
-	u8 rx_bits, tx_bits;
+	u8 bits_count;
+	u8 uart_sm;
+	u8 work_bits;
 	u8 rx_done, tx_done;
-	u8 rx_sm, tx_sm;
-	u8 rx_work_bits, tx_work_bits;
 	u8 stop_bits;
 } soft_uart_ctrl_t;
 
@@ -104,8 +102,7 @@ void uart_init()
 	uart_ctrl.rx_done = 1;
 	uart_ctrl.tx_done = 1;
 	
-	uart_ctrl.tx_sm = SM_BUS_IDLE;	
-	uart_ctrl.rx_sm = SM_BUS_IDLE;
+	uart_ctrl.uart_sm = SM_BUS_IDLE;	
 
 }
 
@@ -181,16 +178,16 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 	//rx
 	if (!uart_ctrl.rx_done) {
 		//收开始位
-		if (uart_ctrl.rx_sm == SM_BUS_IDLE) {
+		if (uart_ctrl.uart_sm == SM_BUS_IDLE) {
 			if (!rx_bit_r()) {
 				//reset控制时序
 				timer_set();
-				uart_ctrl.rx_work_bits = 0;
-				uart_ctrl.rx_bits = DATA_WIDTH;
+				uart_ctrl.work_bits = 0;
+				uart_ctrl.bits_count = DATA_WIDTH;
 				uart_ctrl.stop_bits = STOP_BIT;
 			} else {
-				uart_ctrl.rx_sm = SM_BUS_IDLE;
-				uart_ctrl.rx_bits = 0;
+				uart_ctrl.uart_sm = SM_BUS_IDLE;
+				uart_ctrl.bits_count = 0;
 				uart_ctrl.stop_bits = 0;
 				//停止rx时序控制
 				timer_unset();
@@ -200,41 +197,41 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 				return;
 			}
 
-			uart_ctrl.rx_sm = SM_START_BIT;
+			uart_ctrl.uart_sm = SM_START_BIT;
 			
 		}
 		//收数据位
-		else if (uart_ctrl.rx_sm == SM_START_BIT) {
-			if (uart_ctrl.rx_bits--) {
-				uart_ctrl.rx_work_bits >>= 1;
+		else if (uart_ctrl.uart_sm == SM_START_BIT) {
+			if (uart_ctrl.bits_count--) {
+				uart_ctrl.work_bits >>= 1;
 				if(rx_bit_r())
-					uart_ctrl.rx_work_bits |= 0x80;
+					uart_ctrl.work_bits |= 0x80;
 				//接收完成，下次直接进入停止位状态
-				if (!uart_ctrl.rx_bits)
-					uart_ctrl.rx_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
+				if (!uart_ctrl.bits_count)
+					uart_ctrl.uart_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
 			} else
-					uart_ctrl.rx_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
+					uart_ctrl.uart_sm = SM_STOP_BITS;//SM_DATA_BITS; 跳过停止位
 		}
 		//收停止位
-		else if (uart_ctrl.rx_sm == SM_DATA_BITS) {
+		else if (uart_ctrl.uart_sm == SM_DATA_BITS) {
 			if (uart_ctrl.stop_bits) {
 				uart_ctrl.stop_bits--;
 				// 停止完成，下次直接进入协议结束
 				if (!uart_ctrl.stop_bits)
-					uart_ctrl.rx_sm = SM_STOP_BITS;
+					uart_ctrl.uart_sm = SM_STOP_BITS;
 			} else
-					uart_ctrl.rx_sm = SM_STOP_BITS;
+					uart_ctrl.uart_sm = SM_STOP_BITS;
 		}
 		//协议结束
-		else if (uart_ctrl.rx_sm == SM_STOP_BITS) {
+		else if (uart_ctrl.uart_sm == SM_STOP_BITS) {
 			if (uart_fifo.rct < COM_RX1_Lenth) {	/* Store it into the rx fifo if not full */
 				uart_fifo.rct++;
 				i = uart_fifo.rwi;
-				uart_fifo.rbuf[i] = uart_ctrl.rx_work_bits;
+				uart_fifo.rbuf[i] = uart_ctrl.work_bits;
 				uart_fifo.rwi = ++i % COM_RX1_Lenth;
 			}
 			
-			uart_ctrl.rx_sm = SM_BUS_IDLE;
+			uart_ctrl.uart_sm = SM_BUS_IDLE;
 			//停止rx时序控制
 			timer_unset();
 			//监听串口中断
@@ -248,68 +245,68 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 	//tx
 	if (!uart_ctrl.tx_done) {
 		//发开始位		
-		if (uart_ctrl.tx_sm == SM_BUS_IDLE) {
+		if (uart_ctrl.uart_sm == SM_BUS_IDLE) {
 			//开始tx时序控制
 			timer_set();
-			uart_ctrl.tx_bits = DATA_WIDTH;
+			uart_ctrl.bits_count = DATA_WIDTH;
 			uart_ctrl.stop_bits = STOP_BIT;
 			
 			//获取待发送的字节
 			if (uart_fifo.tct) {	/* There is any data in the tx fifo */
 				i = uart_fifo.tri;
-				uart_ctrl.tx_work_bits = uart_fifo.tbuf[i];
+				uart_ctrl.work_bits = uart_fifo.tbuf[i];
 				uart_fifo.tri = ++i % COM_TX1_Lenth;
 				uart_fifo.tct--;
 			} else {
 				//停止tx时序控制
 				timer_unset();
 				uart_ctrl.tx_done = 1;
-				uart_ctrl.tx_sm = SM_BUS_IDLE;
+				uart_ctrl.uart_sm = SM_BUS_IDLE;
 				//监听串口中断
 				EX_INT_ENABLE();
 				return;
 			}
 			//产生开始位
 			tx_bit_w(0);
-			uart_ctrl.tx_sm = SM_START_BIT;
+			uart_ctrl.uart_sm = SM_START_BIT;
 			
 		} 
 		//发数据位
-		else if (uart_ctrl.tx_sm == SM_START_BIT) {
-			if (uart_ctrl.tx_bits--) {
-				if (uart_ctrl.tx_work_bits & 0x01)
+		else if (uart_ctrl.uart_sm == SM_START_BIT) {
+			if (uart_ctrl.bits_count--) {
+				if (uart_ctrl.work_bits & 0x01)
 					tx_bit_w(1);
 				else
 					tx_bit_w(0);
 				
-				uart_ctrl.tx_work_bits >>= 1;
+				uart_ctrl.work_bits >>= 1;
 				// 发送完成,下次直接进入停止位状态
-				if (!uart_ctrl.tx_bits)
-					uart_ctrl.tx_sm = SM_DATA_BITS;
+				if (!uart_ctrl.bits_count)
+					uart_ctrl.uart_sm = SM_DATA_BITS;
 			}	
 		}
 		//发停止位
-		else if (uart_ctrl.tx_sm == SM_DATA_BITS) {
+		else if (uart_ctrl.uart_sm == SM_DATA_BITS) {
 			if (uart_ctrl.stop_bits) {
 				tx_bit_w(1);
 				uart_ctrl.stop_bits--;
 				// 停止完成,下次直接进入结束状态
 				if (!uart_ctrl.stop_bits)
-					uart_ctrl.tx_sm = SM_STOP_BITS;
+					uart_ctrl.uart_sm = SM_STOP_BITS;
 			}
 		}
 		//协议结束
-		else if (uart_ctrl.tx_sm == SM_STOP_BITS) {
+		else if (uart_ctrl.uart_sm == SM_STOP_BITS) {
 			if (!uart_fifo.tct) {
 				//停止tx时序控制
 				timer_unset();
 				uart_ctrl.tx_done = 1;
-				uart_ctrl.tx_sm = SM_BUS_IDLE;
+				uart_ctrl.uart_sm = SM_BUS_IDLE;
 				//监听串口中断
 				EX_INT_ENABLE();
 				return;
 			} else {
-				uart_ctrl.tx_sm = SM_BUS_IDLE;	
+				uart_ctrl.uart_sm = SM_BUS_IDLE;	
 				goto retry_tx;
 			}
 		}
@@ -334,7 +331,7 @@ void Ext_INT4 (void) interrupt INT4_VECTOR
 	else {
 		//rx时序控制
 		uart_ctrl.rx_done = 0;
-		uart_ctrl.rx_sm = SM_BUS_IDLE;
+		uart_ctrl.uart_sm = SM_BUS_IDLE;
     T2H = (65536 - UART3_BitTime / 4) / 256;  //小半个数据位
     T2L = (65536 - UART3_BitTime / 4) % 256;  //小半个数据位
     AUXR |=  (1<<4);    //Timer2 开始运行

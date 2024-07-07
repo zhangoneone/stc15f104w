@@ -18,8 +18,8 @@
 #include	"config.h"
 #include "typedef.h"
 
-#define	COM_RX1_Lenth	8
-#define	COM_TX1_Lenth	8
+#define	COM_RX1_Lenth	4
+#define	COM_TX1_Lenth	4
 
 typedef struct uart_fifo_t{
 	uint8	tri, twi, tct;

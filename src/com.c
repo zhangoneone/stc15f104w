@@ -11,7 +11,7 @@
 /*
 
 1 byte command
-6 bytes data
+2 bytes data
 1 bytes checksum
 
 cmd: 5 bits op, 3 bits data size
@@ -21,8 +21,8 @@ checksum: sum % 0xFF
 */
 #define	CMD													(0)
 #define	DATA_BEGIN									(1)
-#define	CHECKSUM										(7)
-#define	COM_SIZE										(8)
+#define	CHECKSUM										(3)
+#define	COM_SIZE										(4)
 #define OPS(cmd)										(cmd >> 3)
 #define DSIZE(cmd)									(cmd & 0x07)
 #define MKCMD(ops, dsize)						((ops << 3) | (dsize))
