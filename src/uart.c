@@ -51,7 +51,7 @@ static void timer_unset(void)
 static void uart_try_tx(void)
 {
 	if(uart_ctrl.rx_done) {
-		delay_ms(5); //目前1000波特率，写死延时3ms
+		//delay_ms(5); //目前1000波特率，写死延时3ms
 	} else {
 		return; //正在rx, 取消此次tx, 因为tx满了也会轮询发送的。
 	}
@@ -94,7 +94,7 @@ void uart_init()
 	AUXR &=  ~(1<<4);       // Timer2 停止运行
   T2H = (65536 - UART3_BitTime) / 256;    // 数据位
   T2L = (65536 - UART3_BitTime) % 256;    // 数据位
-	IP2 |= PSH; 										//PX4高优先级
+	IP2 |= PSH; 										//外部中断4高优先级
   INT_CLKO |=  (1 << 6);  // 允许INT4中断
   IE2  |=  (1<<2);        // 允许Timer2中断
   AUXR |=  (1<<2);        // 1T
@@ -307,7 +307,8 @@ void timer2_int (void) interrupt TIMER2_VECTOR
 				return;
 			} else {
 				uart_ctrl.uart_sm = SM_BUS_IDLE;	
-				goto retry_tx;
+				//uart_try_tx();
+				goto retry_tx; //不应该在中断里循环发送所有字符，应该再触发一次中断。避免其他任务没有时间片
 			}
 		}
 
